@@ -1,0 +1,30 @@
+{
+  "temporal": {
+    "window_size": 15,
+    "min_evidence_frames": 5,
+    "movement_threshold_px": 20.0,
+    "interaction_persistence_frames": 3,
+    "detection_gap_grace_period_frames": 8
+  },
+  "confidence": {
+    "high": 0.85,
+    "medium": 0.60,
+    "low": 0.35
+  },
+  "spatial": {
+    "workplace_y_min": 600,
+    "vertical_lift_px": 15.0
+  },
+  "logging": {
+    "log_directory": "logs",
+    "log_level": "INFO",
+    "duplicate_cooldown_seconds": 10.0
+  },
+  "voice": {
+    "voice_enabled": true,
+    "voice_cooldown_seconds": 5.0,
+    "repeat_error_after_seconds": 10.0,
+    "speech_rate": 160,
+    "volume": 1.0
+  }
+}

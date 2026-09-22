@@ -1,0 +1,2 @@
+{"timestamp": 0.1, "frame": 1, "event": "SKIPPED_STEP", "state": "S08", "step_number": 8, "expected_action": "PICK_SPRAY", "observed_action": "SPRAY_PLANT", "status": "ERROR", "confidence": 0.88, "message": "Skipped"}
+{"event": "LOG_CLOSED", "total_events": 1, "duration_seconds": 0.0}

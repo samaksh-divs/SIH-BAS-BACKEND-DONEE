@@ -1,0 +1,2 @@
+{"timestamp": 1.0, "frame": 10, "event": "EXPERIMENT_STARTED", "state": "S01", "step_number": 1, "expected_action": "OPEN_WHITE_BOX", "observed_action": "OPEN_WHITE_BOX", "status": "START", "confidence": 1.0, "message": "Started"}
+{"event": "LOG_CLOSED", "total_events": 1, "duration_seconds": 0.0}

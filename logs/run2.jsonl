@@ -1,0 +1,2 @@
+{"timestamp": 2.0, "frame": 20, "event": "STEP_COMPLETED", "state": "S01", "step_number": 1, "expected_action": "OPEN_WHITE_BOX", "observed_action": "OPEN_WHITE_BOX", "status": "STEP_COMPLETED", "confidence": 0.9, "message": "Completed"}
+{"event": "LOG_CLOSED", "total_events": 1, "duration_seconds": 0.0}

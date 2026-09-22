@@ -1,0 +1,6 @@
+{
+  "stream_enabled": false,
+  "stream_host": "0.0.0.0",
+  "stream_port": 8554,
+  "stream_protocol": "mjpeg"
+}

@@ -1,0 +1,26 @@
+{
+  "baseline": {
+    "pose_cadence": 1,
+    "avg_detector_ms": 60.73,
+    "avg_pose_ms": 73.45,
+    "avg_spatial_ms": 0.0,
+    "avg_p2_ms": 0.13,
+    "avg_total_ms": 134.32,
+    "p50_total_ms": 128.2,
+    "p95_total_ms": 171.27,
+    "max_total_ms": 179.75,
+    "end_to_end_fps": 7.45
+  },
+  "optimized": {
+    "pose_cadence": 2,
+    "avg_detector_ms": 58.65,
+    "avg_pose_ms": 69.16,
+    "avg_spatial_ms": 0.0,
+    "avg_p2_ms": 0.13,
+    "avg_total_ms": 127.96,
+    "p50_total_ms": 126.47,
+    "p95_total_ms": 143.17,
+    "max_total_ms": 153.34,
+    "end_to_end_fps": 7.82
+  }
+}

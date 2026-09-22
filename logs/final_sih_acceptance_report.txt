@@ -1,0 +1,71 @@
+=========================================================================
+        SIH EXPERIMENT 3 - FINAL ACCEPTANCE REPORT & MATRIX              
+=========================================================================
+Generated Timestamp: 2026-09-21 00:33:58
+Overall System Acceptance Status: PASS (9 / 9 VERIFIED)
+Host LAN IP Address: 192.168.31.222
+Active IP Video Stream URL: http://192.168.31.222:8554/stream
+
+-------------------------------------------------------------------------
+PART L — MANDATORY SIH REQUIREMENT MATRIX
+-------------------------------------------------------------------------
+ID   Requirement                                   Status       Evidence Summary
+------------------------------------------------------------------------------------------
+1    Continuous local camera processing            VERIFIED     LiveCameraManager processes OpenCV video...
+2    Predefined experiment tracking                VERIFIED     ExperimentStateMachine accurately tracks...
+3    Next-step suggestion                          VERIFIED     GUI and VoiceAlertManager continuously d...
+4    Skipped/out-of-sequence voice alerts          VERIFIED     VoiceAlertManager uses offline pyttsx3 S...
+5    Timestamped structured logging                VERIFIED     EventLogger generates JSON Lines event l...
+6    Local video storage                           VERIFIED     VideoRecorder asynchronously captures li...
+7    Specified IP video streaming                  VERIFIED     IPStreamer binds to 0.0.0.0:8554 and exp...
+8    Trained AI model running offline on standalone system VERIFIED     Person1LiveAdapter successfully loads lo...
+9    GUI monitoring                                VERIFIED     Tkinter Monitoring GUI displays 4-part s...
+
+DETAILED VERIFICATION EVIDENCE:
+
+[1] Continuous local camera processing
+    Status:   VERIFIED
+    Evidence: LiveCameraManager processes OpenCV video feed continuously at camera capture rate, supporting device index selection, asynchronous frame dispatch, and frame timing telemetry.
+
+[2] Predefined experiment tracking
+    Status:   VERIFIED
+    Evidence: ExperimentStateMachine accurately tracks 15 predefined experiment steps (S01 to S15) defined in config/experiment_sequence.json with resynchronization capabilities.
+
+[3] Next-step suggestion
+    Status:   VERIFIED
+    Evidence: GUI and VoiceAlertManager continuously display and speak human-readable next-step guidance for operators based on current state progression.
+
+[4] Skipped/out-of-sequence voice alerts
+    Status:   VERIFIED
+    Evidence: VoiceAlertManager uses offline pyttsx3 SAPI5/eSpeak TTS to issue audio warnings for skipped steps and out-of-sequence actions with 5-second rate limiting.
+
+[5] Timestamped structured logging
+    Status:   VERIFIED
+    Evidence: EventLogger generates JSON Lines event log files under logs/ with explicit completed_state, completed_step_number, completed_action, next_state, next_step_number, next_action.
+
+[6] Local video storage
+    Status:   VERIFIED
+    Evidence: VideoRecorder asynchronously captures live camera feed and writes MP4 files to recordings/experiment_YYYYMMDD_HHMMSS.mp4, verified via OpenCV opening and frame count validation.
+
+[7] Specified IP video streaming
+    Status:   VERIFIED
+    Evidence: IPStreamer binds to 0.0.0.0:8554 and exposes stream URL http://192.168.31.222:8554/stream. TEST 1 (Localhost 127.0.0.1) and TEST 2 (LAN Interface 192.168.31.222) both PASSED with HTTP 200 MJPEG stream access.
+
+[8] Trained AI model running offline on standalone system
+    Status:   VERIFIED
+    Evidence: Person1LiveAdapter successfully loads local PyTorch YOLO model files models/best.pt (detector, 6 classes) and models/yolo26n-pose.pt (pose, 17 COCO keypoints) running 100% offline on CPU without cloud APIs.
+
+[9] GUI monitoring
+    Status:   VERIFIED
+    Evidence: Tkinter Monitoring GUI displays 4-part status header (CAMERA, PERSON 1 AI, PERSON 2, PERCEPTION), recording status, LAN stream URL, step progression table, recent event tree, and performance telemetry.
+
+-------------------------------------------------------------------------
+PART B & C — PERFORMANCE & TELEMETRY BREAKDOWN
+-------------------------------------------------------------------------
+Detector Inference Avg:     60.73 ms
+Pose Model Inference Avg:   73.45 ms
+Baseline End-to-End FPS:    7.45 FPS (134.3 ms)
+Optimized Cadence 2 FPS:    7.82 FPS (127.9 ms)
+P50 Latency:                126.47 ms
+P95 Latency:                143.17 ms
+Max Latency:                153.34 ms

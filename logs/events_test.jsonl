@@ -1,0 +1,7 @@
+{"timestamp": 0.1, "frame": 1, "event": "EXPERIMENT_STARTED", "state": "S01", "step_number": 1, "expected_action": "OPEN_WHITE_BOX", "observed_action": "OPEN_WHITE_BOX", "status": "START", "confidence": 1.0, "message": "Started"}
+{"timestamp": 0.3, "frame": 3, "event": "STEP_COMPLETED", "state": "S01", "step_number": 1, "expected_action": "OPEN_WHITE_BOX", "observed_action": "OPEN_WHITE_BOX", "status": "STEP_COMPLETED", "confidence": 0.95, "message": "Completed S01"}
+{"timestamp": 1.0, "frame": 10, "event": "SKIPPED_STEP", "state": "S08", "step_number": 8, "expected_action": "PICK_SPRAY", "observed_action": "SPRAY_PLANT", "status": "ERROR", "confidence": 0.88, "message": "Skipped step S08"}
+{"timestamp": 2.0, "frame": 20, "event": "OUT_OF_SEQUENCE", "state": "S02", "step_number": 2, "expected_action": "RETRIEVE_RED_BOX", "observed_action": "RETRIEVE_YELLOW_BOX", "status": "ERROR", "confidence": 0.85, "message": "Out of sequence"}
+{"timestamp": 30.0, "frame": 300, "event": "INACTION", "state": "S03", "step_number": 3, "expected_action": "RETRIEVE_YELLOW_BOX", "observed_action": "UNCERTAIN", "status": "WAITING", "confidence": 0.2, "message": "Inactivity alert"}
+{"timestamp": 50.0, "frame": 500, "event": "EXPERIMENT_COMPLETED", "state": "S16", "step_number": 16, "expected_action": "COMPLETE", "observed_action": "COMPLETE", "status": "COMPLETE", "confidence": 1.0, "message": "Done"}
+{"event": "LOG_CLOSED", "total_events": 6, "duration_seconds": 49.9}

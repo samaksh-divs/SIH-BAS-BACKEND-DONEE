@@ -1,0 +1,32 @@
+=========================================================================
+      SIH EXPERIMENT 3 - PERFORMANCE OPTIMIZATION REPORT                
+=========================================================================
+
+Generated Timestamp: 2026-09-21 00:47:22
+Hardware Device: CPU (Intel 12 Cores)
+Final Decision: KEEP OPTIMIZATION
+FPS Improvement: 20.9%
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+Configuration             ImgSize  Det(ms)   Pose(ms)  E2E(ms)   Avg FPS   P50(ms)   P95(ms)   Max(ms)   Spray OK  Decision
+-----------------------------------------------------------------------------------------------------------------------------------------
+BASELINE                  640      125.93    86.77     212.83    4.7       131.52    269.9     2059.06   True      BASELINE
+POSE_CADENCE_2            640      84.78     101.79    186.7     5.36      139.06    387.71    435.71    True      EVALUATED
+POSE_CADENCE_3            640      84.72     109.11    193.98    5.16      159.31    344.46    507.98    True      EVALUATED
+DETECTOR_CADENCE_2        640      81.65     102.11    183.89    5.44      150.78    333.08    483.93    True      EVALUATED
+INPUT_SIZE_576            576      81.21     94.67     176.04    5.68      152.39    289.94    429.42    True      BEST SAFE
+INPUT_SIZE_512            512      79.03     98.42     177.6     5.63      140.03    345.78    499.03    True      EVALUATED
+COMBINED_POSE2_DET1_576   576      96.94     109.18    206.32    4.85      164.54    413.41    485.4     True      EVALUATED
+COMBINED_POSE2_DET2_640   640      104.34    111.49    215.99    4.63      167.53    403.13    521.13    True      EVALUATED
+
+-------------------------------------------------------------------------
+SUMMARY COMPARISON: BASELINE vs BEST SAFE OPTIMIZATION
+-------------------------------------------------------------------------
+Baseline Configuration:      BASELINE (640px, Pose Cadence 1, Det Cadence 1)
+Baseline FPS:                4.7 FPS (212.83 ms)
+Best Safe Configuration:     INPUT_SIZE_576 (576px, Pose Cadence 1, Det Cadence 1)
+Best Safe FPS:               5.68 FPS (176.04 ms)
+Percentage Improvement:      +20.9%
+Spray Interaction Stability: True
+State Machine Integrity:     100% Preserved
+Final Action:                KEEP OPTIMIZATION

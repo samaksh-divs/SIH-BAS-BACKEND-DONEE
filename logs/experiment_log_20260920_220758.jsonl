@@ -1,0 +1,1 @@
+{"timestamp": 1789922278.507, "frame": 1, "event": "PERCEPTION_UNCERTAIN", "state": "S01", "step_number": 1, "expected_action": "OPEN_WHITE_BOX", "observed_action": "UNCERTAIN", "status": "WAITING", "confidence": 0.2, "message": "Perception uncertain. Open the white box."}

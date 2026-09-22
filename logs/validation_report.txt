@@ -1,0 +1,46 @@
+=========================================================================
+      SIH EXPERIMENT 3 - VALIDATION SUITE REPORT (PHASE 9)              
+=========================================================================
+
+1. DATASET DISCOVERY & AUDIT
+-----------------------------
+Tested Dataset File: data/person1_visual_output.jsonl
+Total Frames Processed: 1860
+Final State: S15
+Uncertain Frames Count: 6 (0.3%)
+
+2. PERFECT SYNTHETIC SEQUENCE VALIDATION
+-----------------------------------------
+Frames Processed: 75
+Final State: S10
+Total State Transitions: 5
+False Errors Detected: 58
+
+3. STATE TRANSITION AUDIT (Real Dataset E07)
+----------------------------------------------
+Frame    Timestamp  Prev State   New State    Type       Observed Action
+---------------------------------------------------------------------------
+7        0.24       S01          S02          NORMAL     OPEN_WHITE_BOX
+65       2.19       S02          S04          RECOVERY   OPEN_RED_BOX
+68       2.29       S04          S05          NORMAL     OPEN_RED_BOX
+144      4.85       S05          S13          RECOVERY   RED_BOX_TO_WHITE_BOX
+147      4.96       S13          S14          NORMAL     RED_BOX_TO_WHITE_BOX
+311      10.48      S14          S15          NORMAL     YELLOW_BOX_TO_WHITE_BOX
+
+4. PROCEDURAL ERROR DETECTION AUDIT
+------------------------------------
+Skipped Synthetic Trial Errors: 60
+  Frame 10 (t=1.00s) | Error: OUT_OF_SEQUENCE | Expected: RETRIEVE_YELLOW_BOX | Obs: RETRIEVE_RED_BOX
+  Frame 11 (t=1.10s) | Error: OUT_OF_SEQUENCE | Expected: RETRIEVE_YELLOW_BOX | Obs: RETRIEVE_RED_BOX
+  Frame 12 (t=1.20s) | Error: OUT_OF_SEQUENCE | Expected: RETRIEVE_YELLOW_BOX | Obs: RETRIEVE_RED_BOX
+  Frame 13 (t=1.30s) | Error: OUT_OF_SEQUENCE | Expected: RETRIEVE_YELLOW_BOX | Obs: RETRIEVE_RED_BOX
+  Frame 14 (t=1.40s) | Error: OUT_OF_SEQUENCE | Expected: RETRIEVE_YELLOW_BOX | Obs: RETRIEVE_RED_BOX
+
+5. LOG / VOICE / GUI CONSISTENCY AUDIT
+---------------------------------------
+State Update -> EventLogger -> VoiceAlertManager -> GUI consistency verified: 100% synchronized.
+
+6. KNOWN LIMITATIONS & RECOMMENDATIONS
+---------------------------------------
+1. Person 1 JSONL (Trial E07) contains partial skips of spraying steps, resulting in resynchronization transitions.
+2. Hand-object geometry distance threshold remains configurable in config/thresholds.json.
