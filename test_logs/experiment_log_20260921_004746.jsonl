@@ -1,4 +1,0 @@
-{"timestamp": 0.033, "frame": 1, "event": "PERCEPTION_UNCERTAIN", "state": "S01", "step_number": 1, "expected_action": "OPEN_WHITE_BOX", "observed_action": "UNCERTAIN", "status": "WAITING", "confidence": 0.2, "message": "Perception uncertain. Open the white box."}
-{"event": "LOG_CLOSED", "total_events": 1, "duration_seconds": 0.0}
-{"timestamp": 10.0, "frame": 100, "event": "EXPERIMENT_COMPLETED", "completed_state": "S15", "completed_step_number": 15, "completed_action": "CLOSE_WHITE_BOX", "next_state": "S16", "next_step_number": 16, "next_action": "COMPLETE", "status": "COMPLETE", "confidence": 0.2, "message": "Experiment complete."}
-{"event": "LOG_CLOSED", "total_events": 1, "duration_seconds": 0.0}

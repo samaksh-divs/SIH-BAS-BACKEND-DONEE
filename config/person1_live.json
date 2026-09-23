@@ -1,7 +1,7 @@
 {
-  "model_path": "models/best.pt",
+  "model_path": "models/yolov8s-world.pt",
   "pose_model_path": "models/yolo26n-pose.pt",
-  "device": "cpu",
+  "device": "cuda",
   "confidence_threshold": 0.20,
   "image_size": 640,
   "tracking_enabled": false

@@ -44,7 +44,7 @@ def main():
         adapter=adapter,
         recorder=recorder,
         streamer=streamer,
-        mock_camera=True  # Simulated 30 FPS camera feed for reliable model testing when no physical webcam lens is attached
+        mock_camera=False  # Simulated 30 FPS camera feed for reliable model testing when no physical webcam lens is attached
     )
 
     frame_counter = [0]
@@ -55,6 +55,24 @@ def main():
         frame_counter[0] += 1
         detected_objects_count[0] = len(norm_frame.objects)
         latest_metrics.update(metrics)
+
+        if obs_action is not None:
+            object_names = [
+                getattr(obj, "class_name", getattr(obj, "class", "unknown"))
+                for obj in norm_frame.objects
+            ]
+
+            print(
+                f"  [ACTION] State={update.current_state_id} | "
+                f"Action={obs_action.action} | "
+                f"Confidence={obs_action.confidence:.2f} | "
+                f"Objects={object_names}"
+            )
+
+            if norm_frame.interaction_signals:
+                print(
+                    f"  [SIGNALS] {norm_frame.interaction_signals}"
+                )
 
     cam_mgr.on_frame_callback = frame_callback
 
@@ -96,7 +114,7 @@ def main():
     cam_mgr.stop_camera()
     print("  -> Camera and Recording STOPPED.")
 
-    cam_mgr.reset_experiment()
+    # cam_mgr.reset_experiment()
     print("  -> Experiment RESET.")
 
     print("\n" + "=" * 75)
@@ -121,3 +139,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

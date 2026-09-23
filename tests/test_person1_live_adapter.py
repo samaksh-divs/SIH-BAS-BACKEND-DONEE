@@ -15,6 +15,10 @@ Tests cover:
 import unittest
 import os
 import time
+import json
+import tempfile
+import shutil
+from unittest import mock
 import numpy as np
 from src.person1_live_adapter import Person1LiveAdapter
 
@@ -57,6 +61,33 @@ class MockYOLOModel:
 
     def __call__(self, image, conf=0.35, imgsz=640, verbose=False):
         return [MockResult()]
+
+
+class MockWorldBoxes(MockBoxes):
+    """Boxes mock carrying a configurable class id."""
+    def __init__(self, cls_id):
+        super().__init__()
+        self.cls = [MockTensorVal(cls_id)]
+
+
+class MockWorldResult(MockResult):
+    """Result mock exposing one box per YOLO-World class id."""
+    def __init__(self):
+        super().__init__()
+        self.boxes = [MockWorldBoxes(i) for i in range(6)]
+
+
+class MockYOLOWorldModel(MockYOLOModel):
+    """Mock YOLO-World model that records set_classes() calls."""
+    def __init__(self, names=None):
+        super().__init__(names)
+        self.set_classes_calls = []
+
+    def set_classes(self, classes):
+        self.set_classes_calls.append(list(classes))
+
+    def __call__(self, image, conf=0.35, imgsz=640, verbose=False):
+        return [MockWorldResult()]
 
 
 class TestPerson1LiveAdapter(unittest.TestCase):
@@ -143,6 +174,59 @@ class TestPerson1LiveAdapter(unittest.TestCase):
         adapter._try_load_models()
         self.assertFalse(adapter.is_cv_model_connected)
         self.assertEqual(adapter.adapter_status, "PERCEPTION_NOT_CONNECTED")
+
+    def test_11_yolo_world_class_configuration(self):
+        """11. A model path containing 'world' loads YOLO-World and receives exactly the 6 requested classes."""
+        expected_mapping = {
+            0: "person",
+            1: "white container",
+            2: "yellow box",
+            3: "red box",
+            4: "plant",
+            5: "spray bottle"
+        }
+
+        temp_dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, temp_dir, ignore_errors=True)
+        config_path = os.path.join(temp_dir, "person1_world_smoke.json")
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "model_path": "models/yolov8s-world.pt",
+                "pose_model_path": "models/non_existent_pose_smoke.pt",
+                "device": "cpu",
+                "confidence_threshold": 0.20,
+                "image_size": 640,
+                "tracking_enabled": False
+            }, f)
+
+        mock_world = MockYOLOWorldModel(names=dict(expected_mapping))
+        with mock.patch("ultralytics.YOLOWorld", return_value=mock_world):
+            adapter = Person1LiveAdapter(config_path=config_path, mock_mode=False)
+
+        self.assertTrue(adapter.is_cv_model_connected)
+        self.assertEqual(adapter.adapter_status, "CONNECTED")
+        self.assertEqual(mock_world.set_classes_calls, [list(expected_mapping.values())])
+        self.assertEqual(len(mock_world.set_classes_calls[0]), 6)
+        self.assertEqual(adapter.model_classes, expected_mapping)
+        self.assertEqual(adapter.device, "cpu")
+
+    def test_12_yolo_world_class_name_normalization(self):
+        """12. YOLO-World class names are normalized to the pipeline naming convention."""
+        mock_world = MockYOLOWorldModel(names={
+            0: "person", 1: "white container", 2: "yellow box", 3: "red box",
+            4: "plant", 5: "spray bottle"
+        })
+        adapter = Person1LiveAdapter(custom_model=mock_world, mock_mode=False)
+        # Red-filled frame so the prototype spray-bottle color check
+        # keeps red_box as red_box (deterministic, no real inference).
+        img = np.full((480, 640, 3), (0, 0, 255), dtype=np.uint8)
+        rec = adapter.process_live_frame(frame_num=1, timestamp=1.0, image_matrix=img)
+
+        detected = {obj["class"] for obj in rec["objects"]}
+        self.assertEqual(detected, {
+            "person", "white_container", "yellow_box", "red_box", "plant",
+            "spray_bottle"
+        })
 
 
 if __name__ == "__main__":
