@@ -183,7 +183,7 @@ class TestPerson1LiveAdapter(unittest.TestCase):
             2: "yellow box",
             3: "red box",
             4: "plant",
-            5: "spray bottle"
+            5: "hand spray bottle"
         }
 
         temp_dir = tempfile.mkdtemp()
@@ -214,7 +214,7 @@ class TestPerson1LiveAdapter(unittest.TestCase):
         """12. YOLO-World class names are normalized to the pipeline naming convention."""
         mock_world = MockYOLOWorldModel(names={
             0: "person", 1: "white container", 2: "yellow box", 3: "red box",
-            4: "plant", 5: "spray bottle"
+            4: "plant", 5: "hand spray bottle"
         })
         adapter = Person1LiveAdapter(custom_model=mock_world, mock_mode=False)
         # Red-filled frame so the prototype spray-bottle color check

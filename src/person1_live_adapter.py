@@ -37,7 +37,7 @@ class Person1LiveAdapter:
         "yellow box",
         "red box",
         "plant",
-        "spray bottle"
+        "hand spray bottle"
     ]
 
     # Backward-compatible naming convention expected by the
@@ -47,7 +47,8 @@ class Person1LiveAdapter:
         "red box": "red_box",
         "yellow box": "yellow_box",
         "black spray bottle": "spray_bottle",
-        "spray bottle": "spray_bottle"
+        "spray bottle": "spray_bottle",
+        "hand spray bottle": "spray_bottle"
     }
 
     def __init__(
@@ -946,3 +947,4 @@ class Person1LiveAdapter:
 
             "adapter_status": "MOCK_ACTIVE"
         }
+

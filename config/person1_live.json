@@ -2,7 +2,7 @@
   "model_path": "models/yolov8s-world.pt",
   "pose_model_path": "models/yolo26n-pose.pt",
   "device": "cuda",
-  "confidence_threshold": 0.20,
+  "confidence_threshold": 0.05,
   "image_size": 640,
   "tracking_enabled": false
 }
