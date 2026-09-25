@@ -349,57 +349,31 @@ class ActionInferenceEngine:
         # ------------------------------------------------------------
         # S07: SPRAY_TO_WORKPLACE
         #
-        # Detect actual spray-bottle displacement.
-        #
-        # We deliberately require meaningful displacement instead of
-        # simply seeing the bottle in the frame.
+        # Spray bottle is hidden inside yellow box initially.
+        # Appearing in frame for 3+ frames = retrieved.
         # ------------------------------------------------------------
 
-        if spray_disp and spray_disp["distance_px"] > 20.0:
-
-            movement_left = spray_disp["is_moving_left"]
-            movement_down = spray_disp["is_moving_down"]
-
-            if movement_left or movement_down:
-
-                evidence = [
-                    "spray_bottle detected",
-                    (
-                        f"spray bottle displacement: "
-                        f"{spray_disp['distance_px']:.1f}px"
-                    ),
-                ]
-
-                if movement_left:
-                    evidence.append(
-                        "spray bottle moving toward workplace horizontally"
+        spray_in_frame = any(obj.class_name == "spray_bottle" for obj in frame.objects)
+        if spray_in_frame and self.buffer.is_object_recently_present("spray_bottle", grace_period_frames=3):
+            # Only return SPRAY_TO_WORKPLACE if we are not actively doing S12 (spray to yellow box)
+            if not ((left_spray or right_spray) and (left_yellow or right_yellow) and spray_disp and spray_disp["distance_px"] > 20.0):
+                # Only if not picking or spraying
+                if not (wrist_disp and (wrist_disp["is_moving_up"] or wrist_disp["is_moving_down"])):
+                    return ObservedAction(
+                        action="SPRAY_TO_WORKPLACE",
+                        confidence=0.88,
+                        confidence_level="HIGH",
+                        evidence=[
+                            "spray_bottle visible in camera frame",
+                            "spray_bottle present for 3+ recent frames (retrieved from yellow box)",
+                        ],
+                        start_frame=max(1, frame.frame - len(self.buffer.frames) + 1),
+                        end_frame=frame.frame,
+                        timestamp=frame.timestamp,
+                        involved_objects=["spray_bottle"],
+                        wrist_side=wrist_side,
+                        reason="Spray bottle appeared in frame — retrieved from yellow box",
                     )
-
-                if movement_down:
-                    evidence.append(
-                        "spray bottle moving toward workplace vertically"
-                    )
-
-                involved_objects = ["spray_bottle"]
-
-                return ObservedAction(
-                    action="SPRAY_TO_WORKPLACE",
-                    confidence=0.84,
-                    confidence_level="HIGH",
-                    evidence=evidence,
-                    start_frame=max(
-                        1,
-                        frame.frame - len(self.buffer.frames) + 1,
-                    ),
-                    end_frame=frame.frame,
-                    timestamp=frame.timestamp,
-                    involved_objects=involved_objects,
-                    wrist_side=wrist_side,
-                    reason=(
-                        "Spray bottle shows sustained displacement "
-                        "toward the workplace"
-                    ),
-                )
 
         # ------------------------------------------------------------
         # S12: SPRAY_TO_YELLOW_BOX
@@ -566,95 +540,59 @@ class ActionInferenceEngine:
         # 3. PLANT ACTIONS
         # ============================================================
 
+        # S05: PLANT_TO_WORKPLACE
+        # Plant is hidden inside the red box initially.
+        # Appearing in frame for 3+ frames = retrieved.
+        plant_in_frame = any(obj.class_name == "plant" for obj in frame.objects)
+        if plant_in_frame and self.buffer.is_object_recently_present("plant", grace_period_frames=3):
+            # If hand is near both plant and red box, it's likely S11 (Plant to red box)
+            is_near_red = (left_red or right_red)
+            if not ((left_plant or right_plant) and plant_disp and plant_disp["distance_px"] > 20.0 and (plant_disp["is_moving_left"] or plant_disp["is_moving_up"] or is_near_red)):
+                return ObservedAction(
+                    action="PLANT_TO_WORKPLACE",
+                    confidence=0.88,
+                    confidence_level="HIGH",
+                    evidence=[
+                        "plant visible in camera frame",
+                        "plant present for 3+ recent frames (retrieved from red box)",
+                    ],
+                    start_frame=max(1, frame.frame - len(self.buffer.frames) + 1),
+                    end_frame=frame.frame,
+                    timestamp=frame.timestamp,
+                    involved_objects=["plant"],
+                    wrist_side=wrist_side,
+                    reason="Plant appeared in frame — retrieved from red box",
+                )
+
         if (
             (left_plant or right_plant)
-            or self.buffer.is_object_recently_present("plant")
+            and plant_disp
+            and plant_disp["distance_px"] > 20.0
         ):
 
-            if left_plant or right_plant:
+            involved_objects = ["plant"]
+            evidence.append("hand near plant")
+            evidence.append(f"plant displacement distance={plant_disp['distance_px']:.1f}px")
 
-                involved_objects = ["plant"]
+            # Red box is on the LEFT. So moving plant to red box = moving LEFT or UP.
+            if (
+                plant_disp["is_moving_left"]
+                or plant_disp["is_moving_up"]
+                or (left_red or right_red)
+            ):
 
-                evidence.append("hand near plant")
-
-                if plant_disp:
-
-                    evidence.append(
-                        f"plant displacement distance="
-                        f"{plant_disp['distance_px']:.1f}px"
-                    )
-
-                    if (
-                        plant_disp["is_moving_left"]
-                        or plant_disp["is_moving_down"]
-                    ):
-
-                        return ObservedAction(
-                            action="PLANT_TO_WORKPLACE",
-                            confidence=0.85,
-                            confidence_level="HIGH",
-                            evidence=evidence,
-                            start_frame=max(
-                                1,
-                                frame.frame
-                                - len(self.buffer.frames)
-                                + 1,
-                            ),
-                            end_frame=frame.frame,
-                            timestamp=frame.timestamp,
-                            involved_objects=involved_objects,
-                            wrist_side=wrist_side,
-                            reason=(
-                                "Hand near plant with movement "
-                                "toward workplace"
-                            ),
-                        )
-
-                    elif (
-                        plant_disp["is_moving_right"]
-                        or plant_disp["is_moving_up"]
-                    ):
-
-                        return ObservedAction(
-                            action="PLANT_TO_RED_BOX",
-                            confidence=0.80,
-                            confidence_level="MEDIUM",
-                            evidence=evidence,
-                            start_frame=max(
-                                1,
-                                frame.frame
-                                - len(self.buffer.frames)
-                                + 1,
-                            ),
-                            end_frame=frame.frame,
-                            timestamp=frame.timestamp,
-                            involved_objects=involved_objects,
-                            wrist_side=wrist_side,
-                            reason=(
-                                "Hand near plant with movement "
-                                "toward red box"
-                            ),
-                        )
-
-                if plant_persist >= 3:
-
-                    return ObservedAction(
-                        action="PLANT_TO_WORKPLACE",
-                        confidence=0.70,
-                        confidence_level="MEDIUM",
-                        evidence=evidence,
-                        start_frame=max(
-                            1,
-                            frame.frame
-                            - len(self.buffer.frames)
-                            + 1,
-                        ),
-                        end_frame=frame.frame,
-                        timestamp=frame.timestamp,
-                        involved_objects=["plant"],
-                        wrist_side=wrist_side,
-                        reason="Hand interacting with plant",
-                    )
+                return ObservedAction(
+                    action="PLANT_TO_RED_BOX",
+                    confidence=0.85,
+                    confidence_level="HIGH",
+                    evidence=evidence,
+                    start_frame=max(1, frame.frame - len(self.buffer.frames) + 1),
+                    end_frame=frame.frame,
+                    timestamp=frame.timestamp,
+                    involved_objects=involved_objects,
+                    wrist_side=wrist_side,
+                    reason="Hand near plant with movement toward red box (left/up) or near red box",
+                )
 
         # ============================================================
         # 4. RED BOX
