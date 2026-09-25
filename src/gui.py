@@ -414,6 +414,8 @@ class ExperimentGUI:
             self.rec_status_var.set("ON" if self.recorder.is_recording else "OFF")
             self.rec_file_var.set(self.recorder.recording_path or "None")
             self.alert_var.set("Live experiment started. Recording & monitoring active.")
+            # Announce start and guide person to Step 1
+            self.pipeline.start_experiment_announcement()
         else:  # MOCK Mode
             self.live_camera.start_experiment()
             self.sys_status_var.set("MOCK EXPERIMENT ACTIVE")
@@ -422,6 +424,8 @@ class ExperimentGUI:
             self.rec_status_var.set("ON" if self.recorder.is_recording else "OFF")
             self.rec_file_var.set(self.recorder.recording_path or "None")
             self.alert_var.set("Explicit MOCK experiment started. Monitoring S01...")
+            # Announce start and guide person to Step 1
+            self.pipeline.start_experiment_announcement()
 
     def _on_pause(self) -> None:
         if self.input_mode_var.get() == "REPLAY":

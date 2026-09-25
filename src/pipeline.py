@@ -46,7 +46,11 @@ class ExperimentPipeline:
         norm_frame: NormalizedFrame = Person1Adapter.parse_record(raw_data)
 
         # 2. Action Inference (updates TemporalHistoryBuffer internally)
-        observed_action: ObservedAction = self.inference_engine.process_frame(norm_frame)
+        # Pass current step number so OPEN vs CLOSE white box is resolved by context
+        observed_action: ObservedAction = self.inference_engine.process_frame(
+            norm_frame,
+            current_step_number=self.state_machine.current_state.step_number
+        )
 
         # 3. State Machine Update
         state_update: StateUpdate = self.state_machine.update(
@@ -66,6 +70,10 @@ class ExperimentPipeline:
             self.on_update_callback(state_update, norm_frame, observed_action)
 
         return state_update, norm_frame, observed_action
+
+    def start_experiment_announcement(self) -> None:
+        """Speaks 'Let's start the experiment!' and guides person to Step 1."""
+        self.voice_manager.speak_experiment_start()
 
     def reset(self) -> None:
         """Resets all pipeline components."""

@@ -30,7 +30,26 @@ class VoiceAlertManager:
         "INACTION": "Please continue with the current step.",
         "PERCEPTION_UNCERTAIN": "Perception is uncertain. Please continue carefully.",
         "RECOVERY": "The system has resynchronized to the detected step.",
-        "COMPLETE": "Experiment complete."
+        "COMPLETE": "Congratulations! Experiment complete. Well done!"
+    }
+
+    # Human-readable step instructions for voice guidance
+    STEP_INSTRUCTIONS = {
+        "OPEN_WHITE_BOX":           "Step 1. Open the white container.",
+        "RETRIEVE_RED_BOX":         "Step 2. Retrieve the red box from the white container.",
+        "RETRIEVE_YELLOW_BOX":      "Step 3. Retrieve the yellow box from the white container.",
+        "OPEN_RED_BOX":             "Step 4. Open the red box.",
+        "PLANT_TO_WORKPLACE":       "Step 5. Move the plant to the workplace.",
+        "OPEN_YELLOW_BOX":          "Step 6. Open the yellow box.",
+        "SPRAY_TO_WORKPLACE":       "Step 7. Place the spray bottle at the workplace.",
+        "PICK_SPRAY":               "Step 8. Pick up the spray bottle.",
+        "SPRAY_PLANT":              "Step 9. Spray the plant.",
+        "SPRAY_TO_WORKPLACE_AGAIN": "Step 10. Return the spray bottle to the workplace.",
+        "PLANT_TO_RED_BOX":         "Step 11. Move the plant to the red box.",
+        "SPRAY_TO_YELLOW_BOX":      "Step 12. Move the spray bottle to the yellow box.",
+        "RED_BOX_TO_WHITE_BOX":     "Step 13. Move the red box into the white container.",
+        "YELLOW_BOX_TO_WHITE_BOX":  "Step 14. Move the yellow box into the white container.",
+        "CLOSE_WHITE_BOX":          "Step 15. Close the white container.",
     }
 
     def __init__(self, config_path: Optional[str] = "config/thresholds.json", use_mock_tts: bool = False):
@@ -107,32 +126,55 @@ class VoiceAlertManager:
         """Convenience method for sending categorized alerts."""
         return self.speak(message, category=category, timestamp=timestamp)
 
+    def speak_experiment_start(self) -> None:
+        """Announces experiment start and guides person to Step 1."""
+        self.speak(
+            "Let's start the experiment! "
+            "Step 1. Open the white container.",
+            category="STEP",
+            force=True
+        )
+
     def speak_state_update(self, update: StateUpdate) -> bool:
         """
         Evaluates a StateUpdate and triggers appropriate rate-limited voice alerts.
         """
         if update.status == "STEP_COMPLETED":
-            # REFORMATTED EXACTLY TO USER'S REQUEST
-            next_msg = update.message.replace('Step complete. Next: ', '')
-            return self.speak(
-                f"Success! Next step is {next_msg}",
-                category="STEP", timestamp=update.timestamp
-            )
+            # Announce success and instruct the NEXT step
+            next_action = update.next_step or ""
+            next_instruction = self.STEP_INSTRUCTIONS.get(next_action, "")
+            if next_instruction:
+                msg = f"Step complete! {next_instruction}"
+            else:
+                msg = "Step complete!"
+            return self.speak(msg, category="STEP", timestamp=update.timestamp, force=True)
         elif update.status == "COMPLETE":
             return self.speak(self.DEFAULT_ERROR_MESSAGES["COMPLETE"], category="COMPLETE", timestamp=update.timestamp, force=True)
         elif update.status == "RECOVERY":
-            return self.speak(self.DEFAULT_ERROR_MESSAGES["RECOVERY"], category="INFO", timestamp=update.timestamp)
+            # Guide person to the recovered step
+            recovered_action = update.expected_action or ""
+            recovered_instruction = self.STEP_INSTRUCTIONS.get(recovered_action, "")
+            msg = self.DEFAULT_ERROR_MESSAGES["RECOVERY"]
+            if recovered_instruction:
+                msg = f"{msg} Please continue: {recovered_instruction}"
+            return self.speak(msg, category="INFO", timestamp=update.timestamp)
         elif update.status == "ERROR" and update.error_type:
             # MUTE OUT OF SEQUENCE ERRORS - NEVER GET STUCK YELLING
             if update.error_type in ("OUT_OF_SEQUENCE", "SKIPPED_STEP", "WRONG_OBJECT"):
-                return False 
-            
+                return False
+
             msg = self.DEFAULT_ERROR_MESSAGES.get(update.error_type, update.message)
             return self.speak(msg, category="ERROR", timestamp=update.timestamp)
         elif update.status == "WAITING" and update.error_type == "INACTION":
-            return self.speak(self.DEFAULT_ERROR_MESSAGES["INACTION"], category="WARNING", timestamp=update.timestamp)
+            # Remind with the specific step instruction
+            action_instruction = self.STEP_INSTRUCTIONS.get(update.expected_action, "")
+            if action_instruction:
+                msg = f"Please continue. {action_instruction}"
+            else:
+                msg = self.DEFAULT_ERROR_MESSAGES["INACTION"]
+            return self.speak(msg, category="WARNING", timestamp=update.timestamp)
         elif update.status == "WAITING" and update.error_type == "PERCEPTION_UNCERTAIN":
-            return False # Mute uncertain errors to avoid spam
+            return False  # Mute uncertain errors to avoid spam
         elif update.status == "ACTIVE" and update.transitioned:
             return self.speak(update.message, category="STEP", timestamp=update.timestamp)
 

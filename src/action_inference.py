@@ -61,9 +61,11 @@ class ActionInferenceEngine:
             else TemporalHistoryBuffer(config_path=config_path)
         )
 
-    def process_frame(self, frame: NormalizedFrame) -> ObservedAction:
+    def process_frame(self, frame: NormalizedFrame, current_step_number: int = 0) -> ObservedAction:
         """
         Update temporal history and infer the most likely action.
+        current_step_number: passed from pipeline so white-box action (open vs close)
+        can be resolved by sequence context, not object visibility.
         """
 
         self.buffer.add_frame(frame)
@@ -233,21 +235,29 @@ class ActionInferenceEngine:
                     f"white container persistence: {white_persist} frames"
                 )
 
-                red_in_frame = any(
-                    obj.class_name == "red_box"
-                    for obj in frame.objects
-                )
-
-                yellow_in_frame = any(
-                    obj.class_name == "yellow_box"
-                    for obj in frame.objects
-                )
-
-                action_name = (
-                    "OPEN_WHITE_BOX"
-                    if (red_in_frame or yellow_in_frame)
-                    else "CLOSE_WHITE_BOX"
-                )
+                # Use sequence context to distinguish OPEN vs CLOSE.
+                # Step 1 (S01) = open, Step 15 (S15) = close.
+                # If step number is not provided, fall back to object visibility.
+                if current_step_number == 15:
+                    action_name = "CLOSE_WHITE_BOX"
+                elif current_step_number == 1 or current_step_number == 0:
+                    # Either explicitly step 1, or no context — default to OPEN
+                    action_name = "OPEN_WHITE_BOX"
+                else:
+                    # Mid-experiment: use object visibility as a secondary hint
+                    red_in_frame = any(
+                        obj.class_name == "red_box"
+                        for obj in frame.objects
+                    )
+                    yellow_in_frame = any(
+                        obj.class_name == "yellow_box"
+                        for obj in frame.objects
+                    )
+                    action_name = (
+                        "OPEN_WHITE_BOX"
+                        if (red_in_frame or yellow_in_frame)
+                        else "CLOSE_WHITE_BOX"
+                    )
 
                 return ObservedAction(
                     action=action_name,
