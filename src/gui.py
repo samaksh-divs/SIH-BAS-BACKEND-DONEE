@@ -307,7 +307,7 @@ class ExperimentGUI:
         log_frame.pack(fill=tk.BOTH, expand=True, pady=4)
 
         cols = ("time", "frame", "event", "step", "status", "message")
-        self.events_tree = ttk.Treeview(log_frame, columns=cols, show="headings", height=10)
+        self.events_tree = ttk.Treeview(log_frame, columns=cols, show="headings", height=5)
         self.events_tree.heading("time", text="Time (s)")
         self.events_tree.heading("frame", text="Frame")
         self.events_tree.heading("event", text="Event")
@@ -326,6 +326,52 @@ class ExperimentGUI:
         self.events_tree.configure(yscroll=scrollbar.set)
         self.events_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # --- NEW: MISSION ASSISTANT CHAT PANEL ---
+        chat_frame = ttk.LabelFrame(right_col, text="MISSION ASSISTANT CHAT", padding=8)
+        chat_frame.pack(fill=tk.BOTH, expand=True, pady=4)
+
+        self.chat_history = tk.Text(chat_frame, height=5, font=("Consolas", 9), bg="#0f172a", fg="#38bdf8", state=tk.DISABLED, wrap=tk.WORD)
+        self.chat_history.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
+
+        chat_input_frame = ttk.Frame(chat_frame)
+        chat_input_frame.pack(fill=tk.X)
+
+        self.chat_input_var = tk.StringVar()
+        chat_entry = ttk.Entry(chat_input_frame, textvariable=self.chat_input_var, font=("Helvetica", 10))
+        chat_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        chat_entry.bind("<Return>", lambda e: self._on_chat_send())
+
+        ttk.Button(chat_input_frame, text="Send", command=self._on_chat_send, width=8).pack(side=tk.RIGHT)
+
+        # Initialize chat with a welcome message
+        self._append_chat("System: AI Assistant online. How can I help with the procedure?")
+
+    def _append_chat(self, msg: str) -> None:
+        self.chat_history.config(state=tk.NORMAL)
+        self.chat_history.insert(tk.END, msg + "\n")
+        self.chat_history.see(tk.END)
+        self.chat_history.config(state=tk.DISABLED)
+
+    def _on_chat_send(self) -> None:
+        user_msg = self.chat_input_var.get().strip()
+        if not user_msg:
+            return
+        self.chat_input_var.set("")
+        self._append_chat(f"Astronaut: {user_msg}")
+        
+        # Simple mock AI responses based on keywords
+        user_msg_lower = user_msg.lower()
+        if "spray" in user_msg_lower:
+            reply = "AI: The spray bottle is located inside the yellow box. Retrieve it during Step 7."
+        elif "red box" in user_msg_lower:
+            reply = "AI: The red box contains the plant sample. Handle with care."
+        elif "help" in user_msg_lower or "next" in user_msg_lower:
+            reply = f"AI: You are currently on {self.step_var.get().split(' ')[0]}. Expected action: {self.action_var.get()}."
+        else:
+            reply = "AI: Query logged. Please proceed with the current step safely."
+            
+        self.root.after(400, lambda: self._append_chat(reply))
 
     def _on_mode_changed(self, event) -> None:
         mode = self.input_mode_var.get()
