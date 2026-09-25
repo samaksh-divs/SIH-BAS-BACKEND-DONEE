@@ -660,6 +660,32 @@ class ActionInferenceEngine:
         # 4. RED BOX
         # ============================================================
 
+        # S02: RETRIEVE_RED_BOX
+        # When camera is front-facing and white container is tall,
+        # the red box is NOT visible while inside the container.
+        # So: red box appearing in frame for 3+ frames = it was retrieved.
+        red_in_frame = any(obj.class_name == "red_box" for obj in frame.objects)
+        if red_in_frame and self.buffer.is_object_recently_present("red_box", grace_period_frames=3):
+            # Only return RETRIEVE_RED_BOX if no active hand interaction
+            # suggesting a more specific action (open/put-back)
+            if not ((left_red or right_red) and red_disp and red_disp["distance_px"] > 25.0):
+                if not ((left_red or right_red) and red_persist >= 5):
+                    return ObservedAction(
+                        action="RETRIEVE_RED_BOX",
+                        confidence=0.88,
+                        confidence_level="HIGH",
+                        evidence=[
+                            "red_box visible in camera frame",
+                            "red_box present for 3+ recent frames (retrieved from container)",
+                        ],
+                        start_frame=max(1, frame.frame - len(self.buffer.frames) + 1),
+                        end_frame=frame.frame,
+                        timestamp=frame.timestamp,
+                        involved_objects=["red_box"],
+                        wrist_side=wrist_side,
+                        reason="Red box appeared in frame — retrieved from tall white container",
+                    )
+
         if (
             (left_red or right_red)
             and red_disp
@@ -677,32 +703,6 @@ class ActionInferenceEngine:
                 f"red box displacement: "
                 f"{red_disp['distance_px']:.1f}px"
             )
-
-            if (
-                red_disp["is_moving_left"]
-                or red_disp["is_moving_down"]
-            ):
-
-                return ObservedAction(
-                    action="RETRIEVE_RED_BOX",
-                    confidence=0.86,
-                    confidence_level="HIGH",
-                    evidence=evidence,
-                    start_frame=max(
-                        1,
-                        frame.frame
-                        - len(self.buffer.frames)
-                        + 1,
-                    ),
-                    end_frame=frame.frame,
-                    timestamp=frame.timestamp,
-                    involved_objects=involved_objects,
-                    wrist_side=wrist_side,
-                    reason=(
-                        "Red box displacement out of "
-                        "white container"
-                    ),
-                )
 
             return ObservedAction(
                 action="RED_BOX_TO_WHITE_BOX",
@@ -762,6 +762,30 @@ class ActionInferenceEngine:
         # 5. YELLOW BOX
         # ============================================================
 
+        # S03: RETRIEVE_YELLOW_BOX
+        # Same logic as red box — camera is front-facing, yellow box is
+        # hidden inside tall white container until person retrieves it.
+        # So: yellow box appearing in frame for 3+ frames = retrieved.
+        yellow_in_frame = any(obj.class_name == "yellow_box" for obj in frame.objects)
+        if yellow_in_frame and self.buffer.is_object_recently_present("yellow_box", grace_period_frames=3):
+            if not ((left_yellow or right_yellow) and yellow_disp and yellow_disp["distance_px"] > 25.0):
+                if not ((left_yellow or right_yellow) and yellow_persist >= 5):
+                    return ObservedAction(
+                        action="RETRIEVE_YELLOW_BOX",
+                        confidence=0.88,
+                        confidence_level="HIGH",
+                        evidence=[
+                            "yellow_box visible in camera frame",
+                            "yellow_box present for 3+ recent frames (retrieved from container)",
+                        ],
+                        start_frame=max(1, frame.frame - len(self.buffer.frames) + 1),
+                        end_frame=frame.frame,
+                        timestamp=frame.timestamp,
+                        involved_objects=["yellow_box"],
+                        wrist_side=wrist_side,
+                        reason="Yellow box appeared in frame — retrieved from tall white container",
+                    )
+
         if (
             (left_yellow or right_yellow)
             and yellow_disp
@@ -779,32 +803,6 @@ class ActionInferenceEngine:
                 f"yellow box displacement: "
                 f"{yellow_disp['distance_px']:.1f}px"
             )
-
-            if (
-                yellow_disp["is_moving_left"]
-                or yellow_disp["is_moving_down"]
-            ):
-
-                return ObservedAction(
-                    action="RETRIEVE_YELLOW_BOX",
-                    confidence=0.86,
-                    confidence_level="HIGH",
-                    evidence=evidence,
-                    start_frame=max(
-                        1,
-                        frame.frame
-                        - len(self.buffer.frames)
-                        + 1,
-                    ),
-                    end_frame=frame.frame,
-                    timestamp=frame.timestamp,
-                    involved_objects=involved_objects,
-                    wrist_side=wrist_side,
-                    reason=(
-                        "Yellow box displacement out of "
-                        "white container"
-                    ),
-                )
 
             return ObservedAction(
                 action="YELLOW_BOX_TO_WHITE_BOX",
