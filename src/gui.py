@@ -250,6 +250,11 @@ class ExperimentGUI:
             lbl_txt.grid(row=r, column=c + 1, sticky=tk.W, padx=5, pady=1)
             self.step_items[sid] = lbl_txt
 
+        # --- NEW: EXPERIMENT PROGRESS BAR ---
+        self.progress_var = tk.DoubleVar(value=0.0)
+        self.progress_bar = ttk.Progressbar(steps_frame, orient=tk.HORIZONTAL, variable=self.progress_var, maximum=15)
+        self.progress_bar.pack(fill=tk.X, pady=(10, 2))
+
         # System Health & Module Status Frame
         health_frame = ttk.LabelFrame(right_col, text="SYSTEM HEALTH & MANDATORY CAPABILITIES", padding=8)
         health_frame.pack(fill=tk.X, pady=4)
@@ -274,14 +279,23 @@ class ExperimentGUI:
         self.perception_status_var = tk.StringVar(value="UNAVAILABLE")
         ttk.Label(h_grid, textvariable=self.perception_status_var, font=("Helvetica", 9, "bold"), foreground="#dc2626").grid(row=1, column=3, sticky=tk.W, padx=10)
 
-        # Recording & Streaming Info
-        ttk.Label(h_grid, text="RECORDING:", font=("Helvetica", 9, "bold")).grid(row=2, column=0, sticky=tk.W)
-        self.rec_status_var = tk.StringVar(value="OFF")
-        ttk.Label(h_grid, textvariable=self.rec_status_var, font=("Helvetica", 9), foreground="#64748b").grid(row=2, column=1, sticky=tk.W, padx=10)
+        # --- NEW: ASTRONAUT TELEMETRY ---
+        ttk.Label(h_grid, text="ASTRONAUT HR:", font=("Helvetica", 9, "bold")).grid(row=2, column=0, sticky=tk.W, pady=(5,0))
+        self.hr_var = tk.StringVar(value="72 bpm")
+        ttk.Label(h_grid, textvariable=self.hr_var, font=("Helvetica", 9, "bold"), foreground="#0284c7").grid(row=2, column=1, sticky=tk.W, padx=10, pady=(5,0))
 
-        ttk.Label(h_grid, text="IP STREAM:", font=("Helvetica", 9, "bold")).grid(row=2, column=2, sticky=tk.W)
+        ttk.Label(h_grid, text="SUIT O2 / PRES:", font=("Helvetica", 9, "bold")).grid(row=2, column=2, sticky=tk.W, pady=(5,0))
+        self.o2_var = tk.StringVar(value="99% / 14.7 psi")
+        ttk.Label(h_grid, textvariable=self.o2_var, font=("Helvetica", 9, "bold"), foreground="#0284c7").grid(row=2, column=3, sticky=tk.W, padx=10, pady=(5,0))
+
+        # Recording & Streaming Info
+        ttk.Label(h_grid, text="RECORDING:", font=("Helvetica", 9, "bold")).grid(row=3, column=0, sticky=tk.W, pady=(5,0))
+        self.rec_status_var = tk.StringVar(value="OFF")
+        ttk.Label(h_grid, textvariable=self.rec_status_var, font=("Helvetica", 9), foreground="#64748b").grid(row=3, column=1, sticky=tk.W, padx=10, pady=(5,0))
+
+        ttk.Label(h_grid, text="IP STREAM:", font=("Helvetica", 9, "bold")).grid(row=3, column=2, sticky=tk.W, pady=(5,0))
         self.stream_status_var = tk.StringVar(value="OFF")
-        ttk.Label(h_grid, textvariable=self.stream_status_var, font=("Helvetica", 9), foreground="#64748b").grid(row=2, column=3, sticky=tk.W, padx=10)
+        ttk.Label(h_grid, textvariable=self.stream_status_var, font=("Helvetica", 9), foreground="#64748b").grid(row=3, column=3, sticky=tk.W, padx=10, pady=(5,0))
 
         # Active Recording File Display
         self.rec_file_var = tk.StringVar(value="None")
@@ -529,6 +543,16 @@ class ExperimentGUI:
         self.next_step_var.set(f"{update.next_step or 'None'}")
         self.status_var.set(update.status)
         self.alert_var.set(update.message)
+
+        # Update Progress Bar
+        self.progress_var.set(update.current_step)
+
+        # Fake Telemetry Jitter
+        import random
+        if getattr(self, "_telemetry_timer", 0) % 15 == 0:
+            self.hr_var.set(f"{random.randint(70, 78)} bpm")
+            self.o2_var.set(f"99% / {random.uniform(14.6, 14.8):.2f} psi")
+        self._telemetry_timer = getattr(self, "_telemetry_timer", 0) + 1
 
         if metrics:
             self.metrics_var.set(
