@@ -362,10 +362,22 @@ class ExperimentGUI:
         
         # Simple mock AI responses based on keywords
         user_msg_lower = user_msg.lower()
-        if "spray" in user_msg_lower:
+        if "hello" in user_msg_lower or "hi" in user_msg_lower.split():
+            reply = "AI: Greetings, Astronaut. How can I assist you with Experiment 3 today?"
+        elif "spray" in user_msg_lower:
             reply = "AI: The spray bottle is located inside the yellow box. Retrieve it during Step 7."
+        elif "plant" in user_msg_lower:
+            reply = "AI: The plant sample must be moved to the workplace in Step 5 and sprayed in Step 9."
         elif "red box" in user_msg_lower:
             reply = "AI: The red box contains the plant sample. Handle with care."
+        elif "yellow box" in user_msg_lower:
+            reply = "AI: The yellow box contains the spray bottle. You will open it in Step 6."
+        elif "white box" in user_msg_lower or "container" in user_msg_lower:
+            reply = "AI: The white container holds all mission payloads. Ensure it is closed at the very end (Step 15)."
+        elif "status" in user_msg_lower:
+            reply = "AI: Systems nominal. Telemetry and Perception models are running safely on local edge hardware."
+        elif "offline" in user_msg_lower or "internet" in user_msg_lower:
+            reply = "AI: Confirmed. We are operating 100% offline. No mission data is leaving this device."
         elif "help" in user_msg_lower or "next" in user_msg_lower:
             reply = f"AI: You are currently on {self.step_var.get().split(' ')[0]}. Expected action: {self.action_var.get()}."
         else:
