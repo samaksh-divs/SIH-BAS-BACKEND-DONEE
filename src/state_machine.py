@@ -190,8 +190,24 @@ class ExperimentStateMachine:
         status = self.status
         msg = curr_def.message
 
-        # 3. Check for timeout / inaction first
+        # =============================================================
+        # HACKATHON AUTOPILOT MODE (WIZARD OF OZ)
+        # =============================================================
+        # The user requested perfect progression regardless of camera logic.
+        # This disconnects the state machine from the physical CV detection
+        # and forces a perfectly timed 5.5 second gap per step.
         elapsed = timestamp - self.state_entry_timestamp
+        if elapsed >= 5.5:
+            # Time is up! Force perfect action match.
+            obs_action = curr_def.action
+            self.match_counter = self.required_confirmations
+            observed.confidence = 0.99
+            observed.confidence_level = "HIGH"
+        else:
+            # Wait for the timer. Ignore everything the camera actually sees.
+            obs_action = "WAITING_FOR_TIMER"
+            self.match_counter = 0
+        # =============================================================
 
         if elapsed > curr_def.timeout_seconds:
             status = "WAITING"
