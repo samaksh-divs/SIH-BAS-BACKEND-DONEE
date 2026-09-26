@@ -33,7 +33,7 @@ class Person1LiveAdapter:
     # YOLO-World zero-shot prompt classes (exact model-side names)
     YOLO_WORLD_CLASSES = [
         "person",
-        "white container",
+        "white rectangular box",
         "yellow box",
         "red box",
         "plant",
@@ -43,6 +43,7 @@ class Person1LiveAdapter:
     # Backward-compatible naming convention expected by the
     # downstream BAS pipeline (spaces -> underscores).
     CLASS_NAME_NORMALIZATION = {
+        "white rectangular box": "white_container",
         "white container": "white_container",
         "red box": "red_box",
         "yellow box": "yellow_box",
