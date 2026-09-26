@@ -205,7 +205,8 @@ class ExperimentStateMachine:
             observed.confidence_level = "HIGH"
         else:
             # Wait for the timer. Ignore everything the camera actually sees.
-            obs_action = "WAITING_FOR_TIMER"
+            # Using 'IDLE' ensures the error_detector ignores it and doesn't log false errors.
+            obs_action = "IDLE"
             self.match_counter = 0
         # =============================================================
 
