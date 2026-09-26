@@ -84,6 +84,10 @@ class ExperimentStateMachine:
         self.recovery_target_index: Optional[int] = None
         self.recovery_counter: int = 0
 
+        # Hackathon demo flag — set via GUI checkbox
+        # False = clean perfect run (Video 1), True = scripted error at Step 2 (Video 2)
+        self.scripted_error_enabled: bool = False
+
     def _load_sequence(self) -> None:
         if not os.path.exists(self.sequence_config_path):
             raise FileNotFoundError(
@@ -202,7 +206,7 @@ class ExperimentStateMachine:
 
         SCRIPTED_ERROR_STEP_INDEX = 1  # Step 2
 
-        if self.current_index == SCRIPTED_ERROR_STEP_INDEX and 5.5 <= elapsed < 11.0:
+        if self.current_index == SCRIPTED_ERROR_STEP_INDEX and self.scripted_error_enabled and 5.5 <= elapsed < 11.0:
             # Directly build and return a clean WRONG_OBJECT error StateUpdate
             # This bypasses the error_detector so the log shows a single, clean entry.
             observed.action = "RETRIEVE_YELLOW_BOX"

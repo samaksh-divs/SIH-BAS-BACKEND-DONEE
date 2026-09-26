@@ -221,6 +221,16 @@ class ExperimentGUI:
         speed_combo.pack(side=tk.LEFT)
         speed_combo.bind("<<ComboboxSelected>>", self._on_speed_changed)
 
+        # Error Demo Mode checkbox
+        self.error_demo_var = tk.BooleanVar(value=False)
+        error_chk = ttk.Checkbutton(
+            btn_sub_frame,
+            text="🔴 Error Demo Mode",
+            variable=self.error_demo_var,
+            command=self._on_error_demo_toggled
+        )
+        error_chk.pack(side=tk.LEFT, padx=(15, 2))
+
         # Right Column
         right_col = ttk.Frame(main_paned, padding=5)
         main_paned.add(right_col, weight=2)
@@ -588,6 +598,15 @@ class ExperimentGUI:
             self.replay.set_speed(sp)
         except ValueError:
             pass
+
+    def _on_error_demo_toggled(self) -> None:
+        """Enables or disables the scripted WRONG_OBJECT error at Step 2."""
+        enabled = self.error_demo_var.get()
+        self.pipeline.state_machine.scripted_error_enabled = enabled
+        if enabled:
+            self.alert_var.set("🔴 Error Demo Mode ON — WARNING will fire at Step 2.")
+        else:
+            self.alert_var.set("✅ Error Demo Mode OFF — Clean perfect run mode.")
 
     def _queue_update_callback(self, update: StateUpdate, frame_obj: NormalizedFrame, obs_action: ObservedAction) -> None:
         self.update_queue.put(("UPDATE", update, frame_obj, obs_action, None, None))
