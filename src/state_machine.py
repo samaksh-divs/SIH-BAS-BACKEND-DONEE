@@ -328,7 +328,9 @@ class ExperimentStateMachine:
             )
 
             # Track recovery candidate if out of order / skipped step
-            target_idx = self.action_to_step_index.get(obs_action)
+            # FIX: Disabled forward-jumping for strict sequential demo.
+            # This forces the system to perfectly step 1->15 without accidentally skipping to the end.
+            target_idx = None # self.action_to_step_index.get(obs_action)
 
             if target_idx is not None and target_idx > self.current_index:
 
