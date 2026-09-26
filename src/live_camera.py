@@ -184,13 +184,7 @@ class LiveCameraManager:
                 message="Started live experiment tracking S01"
             )
 
-        # Proactive voice: announce the first step immediately
-        first_step = self.pipeline.state_machine.current_state
-        self.pipeline.voice_manager.speak(
-            f"Experiment started. Step 1: {first_step.message}",
-            category="STEP",
-            force=True
-        )
+        # The start announcement is handled safely by the GUI via pipeline.start_experiment_announcement()
 
 
     def pause_experiment(self) -> None:
