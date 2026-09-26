@@ -76,6 +76,7 @@ class VoiceAlertManager:
         # TTS engine queue to prevent Windows deadlocks
         self._tts_enabled = not self.use_mock_tts
         self._tts_queue = queue.Queue()
+        self._warning_played = False  # ensure WARNING.wav only fires once per error window
         if self._tts_enabled:
             self._tts_thread = threading.Thread(target=_tts_worker_loop, args=(self._tts_queue,), daemon=True)
             self._tts_thread.start()
@@ -87,15 +88,24 @@ class VoiceAlertManager:
 
     def speak_state_update(self, update: StateUpdate) -> bool:
         """
-        Triggers custom audio file playback on step transition.
+        Triggers custom audio file playback on step transition or scripted error.
         """
         if update.transitioned:
+            # Reset warning flag so it can fire again on future runs
+            self._warning_played = False
             if self._tts_enabled:
                 next_id = "S" + str(update.current_step).zfill(2)
                 if next_id != "S16":
                     self._tts_queue.put(f"FILE:{next_id}")
             return True
-            
+
+        # Play WARNING.wav exactly once when the scripted error fires
+        if update.status == "ERROR" and update.error_type == "WRONG_OBJECT":
+            if not self._warning_played and self._tts_enabled:
+                self._warning_played = True
+                self._tts_queue.put("FILE:WARNING")
+            return True
+
         return False
 
     def reset(self) -> None:

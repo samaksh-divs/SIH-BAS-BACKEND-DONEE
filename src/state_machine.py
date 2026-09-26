@@ -193,19 +193,41 @@ class ExperimentStateMachine:
         # =============================================================
         # HACKATHON AUTOPILOT MODE (WIZARD OF OZ)
         # =============================================================
-        # The user requested perfect progression regardless of camera logic.
-        # This disconnects the state machine from the physical CV detection
-        # and forces a perfectly timed 5.5 second gap per step.
+        # Step 2 (index 1) has a SCRIPTED ERROR for demo purposes:
+        #   0s - 5.5s  : Normal IDLE wait (S02 audio already played at start)
+        #   5.5s - 11s : Force WRONG_OBJECT error + WARNING audio plays once
+        #   11s+       : Auto-recover and advance to Step 3
+        # All other steps use the normal 5.5-second autopilot.
         elapsed = timestamp - self.state_entry_timestamp
-        if elapsed >= 5.5:
-            # Time is up! Force perfect action match.
+
+        SCRIPTED_ERROR_STEP_INDEX = 1  # Step 2
+
+        if self.current_index == SCRIPTED_ERROR_STEP_INDEX:
+            if elapsed >= 11.0:
+                # Force correct action match → advance
+                obs_action = curr_def.action
+                self.match_counter = self.required_confirmations
+                observed.confidence = 0.99
+                observed.confidence_level = "HIGH"
+            elif elapsed >= 5.5:
+                # SCRIPTED ERROR WINDOW: force WRONG_OBJECT
+                obs_action = "RETRIEVE_YELLOW_BOX"  # wrong action for step 2
+                self.match_counter = 0
+                observed.confidence = 0.82
+                observed.confidence_level = "HIGH"
+                # Signal voice manager to play WARNING once
+                observed._trigger_warning = True
+            else:
+                obs_action = "IDLE"
+                self.match_counter = 0
+        elif elapsed >= 5.5:
+            # Normal autopilot: force perfect action match
             obs_action = curr_def.action
             self.match_counter = self.required_confirmations
             observed.confidence = 0.99
             observed.confidence_level = "HIGH"
         else:
-            # Wait for the timer. Ignore everything the camera actually sees.
-            # Using 'IDLE' ensures the error_detector ignores it and doesn't log false errors.
+            # Wait for timer
             obs_action = "IDLE"
             self.match_counter = 0
         # =============================================================
