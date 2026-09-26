@@ -6,6 +6,7 @@ import json
 import os
 import threading
 import time
+import queue
 from typing import Dict, List, Optional, Tuple, Any
 
 from src.state_machine import StateUpdate
@@ -15,6 +16,27 @@ try:
     HAS_PYTTSX3 = True
 except ImportError:
     HAS_PYTTSX3 = False
+
+
+def _tts_worker_loop(q: queue.Queue):
+    if not HAS_PYTTSX3:
+        return
+    try:
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 160)
+    except Exception:
+        return
+    
+    while True:
+        msg = q.get()
+        if msg is None:
+            break
+        try:
+            engine.say(msg)
+            engine.runAndWait()
+        except Exception:
+            pass
+        q.task_done()
 
 
 class VoiceAlertManager:
@@ -72,8 +94,12 @@ class VoiceAlertManager:
         # Spoken history for verification/testing
         self.spoken_history: List[Tuple[float, str, str]] = []  # (timestamp, category, message)
 
-        # TTS engine is created fresh per call (fixes Windows SAPI5 COM threading issue)
+        # TTS engine queue to prevent Windows COM deadlocks
         self._tts_enabled = HAS_PYTTSX3 and not self.use_mock_tts
+        self._tts_queue = queue.Queue()
+        if self._tts_enabled:
+            self._tts_thread = threading.Thread(target=_tts_worker_loop, args=(self._tts_queue,), daemon=True)
+            self._tts_thread.start()
 
     def speak(
         self,
@@ -107,18 +133,9 @@ class VoiceAlertManager:
 
         self.spoken_history.append((current_time, category, message))
 
-        # Perform TTS — fresh engine per call avoids Windows SAPI5 COM threading crash
+        # Send message to the dedicated TTS thread
         if self._tts_enabled:
-            def _say():
-                try:
-                    engine = pyttsx3.init()
-                    engine.setProperty('rate', 160)
-                    engine.say(message)
-                    engine.runAndWait()
-                    engine.stop()
-                except Exception:
-                    pass
-            threading.Thread(target=_say, daemon=True).start()
+            self._tts_queue.put(message)
 
         return True
 
