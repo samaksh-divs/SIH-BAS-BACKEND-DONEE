@@ -194,13 +194,30 @@ class ExperimentStateMachine:
         # HACKATHON AUTOPILOT MODE (WIZARD OF OZ)
         # =============================================================
         # Step 2 (index 1) has a SCRIPTED ERROR for demo purposes:
-        #   0s - 5.5s  : Normal IDLE wait (S02 audio already played at start)
-        #   5.5s - 11s : Force WRONG_OBJECT error + WARNING audio plays once
+        #   0s - 5.5s  : Normal IDLE wait
+        #   5.5s - 11s : Return WRONG_OBJECT error directly (realistic log entry)
         #   11s+       : Auto-recover and advance to Step 3
         # All other steps use the normal 5.5-second autopilot.
         elapsed = timestamp - self.state_entry_timestamp
 
         SCRIPTED_ERROR_STEP_INDEX = 1  # Step 2
+
+        if self.current_index == SCRIPTED_ERROR_STEP_INDEX and 5.5 <= elapsed < 11.0:
+            # Directly build and return a clean WRONG_OBJECT error StateUpdate
+            # This bypasses the error_detector so the log shows a single, clean entry.
+            observed.action = "RETRIEVE_YELLOW_BOX"
+            observed.confidence = 0.82
+            observed.confidence_level = "HIGH"
+            return self._build_update(
+                observed,
+                frame,
+                timestamp,
+                transitioned=False,
+                prev_state=curr_def.state_id,
+                status="ERROR",
+                err_type="WRONG_OBJECT",
+                msg=f"Warning: Incorrect object interaction detected. Expected 'RETRIEVE_RED_BOX'."
+            )
 
         if self.current_index == SCRIPTED_ERROR_STEP_INDEX:
             if elapsed >= 11.0:
@@ -209,14 +226,6 @@ class ExperimentStateMachine:
                 self.match_counter = self.required_confirmations
                 observed.confidence = 0.99
                 observed.confidence_level = "HIGH"
-            elif elapsed >= 5.5:
-                # SCRIPTED ERROR WINDOW: force WRONG_OBJECT
-                obs_action = "RETRIEVE_YELLOW_BOX"  # wrong action for step 2
-                self.match_counter = 0
-                observed.confidence = 0.82
-                observed.confidence_level = "HIGH"
-                # Signal voice manager to play WARNING once
-                observed._trigger_warning = True
             else:
                 obs_action = "IDLE"
                 self.match_counter = 0

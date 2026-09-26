@@ -327,6 +327,9 @@ class ExperimentGUI:
         self.events_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+        # Export Log CSV button
+        ttk.Button(log_frame, text="⬇ Export Log CSV", command=self._export_log_csv).pack(side=tk.BOTTOM, pady=(4, 0))
+
         # --- NEW: MISSION ASSISTANT CHAT PANEL ---
         chat_frame = ttk.LabelFrame(right_col, text="MISSION ASSISTANT CHAT", padding=8)
         chat_frame.pack(fill=tk.BOTH, expand=True, pady=4)
@@ -448,6 +451,28 @@ class ExperimentGUI:
         self.rec_status_var.set("OFF")
         self.stream_status_var.set("OFF")
         self.alert_var.set("Camera and recording stopped.")
+
+    def _export_log_csv(self) -> None:
+        """Exports the Structured Event Log History table to a CSV file."""
+        import csv
+        filepath = filedialog.asksaveasfilename(
+            title="Export Event Log",
+            defaultextension=".csv",
+            filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")],
+            initialfile="experiment_event_log.csv"
+        )
+        if not filepath:
+            return
+        try:
+            cols = ("Time (s)", "Frame", "Event", "Step", "Status", "Message")
+            rows = [self.events_tree.item(row)["values"] for row in self.events_tree.get_children()]
+            with open(filepath, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(cols)
+                writer.writerows(reversed(rows))  # chronological order
+            self.alert_var.set(f"Log exported to: {filepath}")
+        except Exception as e:
+            self.alert_var.set(f"Export failed: {e}")
 
     def _browse_file(self) -> None:
         filename = filedialog.askopenfilename(
@@ -648,19 +673,41 @@ class ExperimentGUI:
                 lbl.configure(font=("Helvetica", 9), foreground="#334155")
 
         # Update events log tree if meaningful event occurred
+        # Map of step index -> new object introduced at that step
+        STEP_NEW_OBJECT = {
+            1: "White Container",   # S01
+            2: "Red Box",           # S02
+            3: "Yellow Box",        # S03
+            5: "Plant",             # S05
+            7: "Hand Spray Bottle", # S07
+        }
         if update.status in ("STEP_COMPLETED", "ERROR", "RECOVERY", "COMPLETE") or update.transitioned:
             evt_name = update.status if not update.error_type else update.error_type
             self.events_tree.insert(
                 "", 0,
                 values=(
-                    f"{frame_obj.timestamp:.2f}",
+                    f"{frame_obj.timestamp:.1f}",
                     frame_obj.frame,
                     evt_name,
                     update.current_state_id,
                     update.status,
-                    update.message[:50]
+                    update.message[:55]
                 )
             )
+            # If this is a step completion, also log object detection for relevant steps
+            if update.transitioned and update.completed_step_number in STEP_NEW_OBJECT:
+                obj_name = STEP_NEW_OBJECT[update.completed_step_number]
+                self.events_tree.insert(
+                    "", 0,
+                    values=(
+                        f"{frame_obj.timestamp:.1f}",
+                        frame_obj.frame,
+                        "OBJECT_DETECTED",
+                        update.current_state_id,
+                        "ACTIVE",
+                        f"{obj_name} detected in workspace."
+                    )
+                )
 
         # Render live video frame to canvas WITH detection overlay
         if cv_image is not None and HAS_PIL:
