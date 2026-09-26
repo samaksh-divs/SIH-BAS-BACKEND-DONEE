@@ -391,6 +391,11 @@ class Person1LiveAdapter:
             else {}
         )
 
+        # We pass a lower global threshold to YOLO (0.15) so it doesn't throw away
+        # the white_container. We will manually enforce the strict 0.35 threshold
+        # on all other objects in the python loop below.
+        model_conf = 0.15
+
         if (
             self.config.get("tracking_enabled", True)
             and hasattr(self.model, "track")
@@ -398,7 +403,7 @@ class Person1LiveAdapter:
             try:
                 results = self.model.track(
                     image_matrix,
-                    conf=conf,
+                    conf=model_conf,
                     imgsz=imgsz,
                     persist=True,
                     **device_kwargs,
@@ -408,7 +413,7 @@ class Person1LiveAdapter:
             except Exception:
                 results = self.model(
                     image_matrix,
-                    conf=conf,
+                    conf=model_conf,
                     imgsz=imgsz,
                     **device_kwargs,
                     verbose=False
@@ -417,7 +422,7 @@ class Person1LiveAdapter:
         else:
             results = self.model(
                 image_matrix,
-                conf=conf,
+                conf=model_conf,
                 imgsz=imgsz,
                 **device_kwargs,
                 verbose=False
@@ -501,6 +506,16 @@ class Person1LiveAdapter:
                         cls_name,
                         cls_name
                     )
+
+                    # -------------------------------------------------
+                    # Custom Confidence Filter (White Container Fix)
+                    # -------------------------------------------------
+                    if cls_name == "white_container":
+                        if confidence < 0.15:
+                            continue  # Allow white container down to 15% confidence
+                    else:
+                        if confidence < conf:
+                            continue  # Strictly enforce original 35% for everything else
 
                     # -------------------------------------------------
                     # Prototype spray-bottle color reclassification
