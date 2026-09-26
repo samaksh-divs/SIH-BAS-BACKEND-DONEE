@@ -22,7 +22,7 @@ class VideoRecorder:
     Asynchronous local MP4 video recorder for experiment runs.
     """
 
-    def __init__(self, output_dir: str = "recordings", fps: float = 30.0):
+    def __init__(self, output_dir: str = "recordings", fps: float = 5.0):
         self.output_dir = output_dir
         self.fps = fps
 
