@@ -388,6 +388,8 @@ class Person1LiveAdapter:
         device_kwargs = (
             {"device": self.device}
             if self._models_loaded_internally
+            else {}
+        )
         if (
             self.config.get("tracking_enabled", True)
             and hasattr(self.model, "track")
