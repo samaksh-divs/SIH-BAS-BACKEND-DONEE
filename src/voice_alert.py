@@ -3,6 +3,7 @@ Offline Voice Alert Manager
 Provides rate-limited offline text-to-speech alerts using pyttsx3 (with fallback for mock/test environments).
 """
 import json
+import os
 import threading
 import time
 import queue
