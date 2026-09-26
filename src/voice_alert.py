@@ -139,9 +139,9 @@ class VoiceAlertManager:
         """
         Evaluates a StateUpdate and triggers appropriate rate-limited voice alerts.
         """
-        if update.status == "STEP_COMPLETED":
+        if update.transitioned:
             # Announce success and instruct the NEXT step
-            next_action = update.next_step or ""
+            next_action = update.expected_action or ""
             next_instruction = self.STEP_INSTRUCTIONS.get(next_action, "")
             if next_instruction:
                 msg = f"Step complete! {next_instruction}"
@@ -175,9 +175,7 @@ class VoiceAlertManager:
             return self.speak(msg, category="WARNING", timestamp=update.timestamp)
         elif update.status == "WAITING" and update.error_type == "PERCEPTION_UNCERTAIN":
             return False  # Mute uncertain errors to avoid spam
-        elif update.status == "ACTIVE" and update.transitioned:
-            return self.speak(update.message, category="STEP", timestamp=update.timestamp)
-
+        
         return False
 
     def reset(self) -> None:
